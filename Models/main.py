@@ -37,7 +37,7 @@ class Hotel(Base):
     description = Column(String(255))
     rating = Column(Float)
     city_id = Column(Integer, ForeignKey("cities.id"))
-    rooms = relationship("Room", back_populates="hotel")
+    rooms = relationship("Room", backref="hotel_rooms", overlaps="room_hotel")  # Updated with 'overlaps'
 
 # Define Room Model
 class Room(Base):
@@ -47,14 +47,14 @@ class Room(Base):
     description = Column(String(255))
     price = Column(Float)
     hotel_id = Column(Integer, ForeignKey("hotels.id"))
-    hotel = relationship("Hotel", back_populates="rooms")
+    hotel = relationship("Hotel", backref="room_hotel", overlaps="hotel_rooms")  # Updated with 'overlaps'
 
 # Define City Model
 class City(Base):
     __tablename__ = "cities"
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), nullable=False)
-    hotels = relationship("Hotel", back_populates="city")
+    hotels = relationship("Hotel", backref="city")
 
 # Create tables
 Base.metadata.create_all(engine)
@@ -96,9 +96,6 @@ def print_user_details(username):
     else:
         print(f"User with username '{username}' not found.")
     session.close()
-
-
-
 
 def print_city_reservations(city_name):
     session = Session()

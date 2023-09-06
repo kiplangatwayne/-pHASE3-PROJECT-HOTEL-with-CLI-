@@ -2,9 +2,9 @@ import argparse
 import click
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from user import User  # Import the User model (update the import path as needed)
-from city import City  # Import the City model
-from Hotel import Hotel  # Import the Hotel model
+# from user import User  # Import the User model (update the import path as needed)
+# from city import City  # Import the City model
+# from Hotel import Hotel  # Import the Hotel model
 
 # Database Configuration
 DATABASE_URL = "sqlite:///hotel_booking.db"  # SQLite database (update as needed)
@@ -36,9 +36,9 @@ def cli():
 def search_hotels(city):
     """Search for hotels in a city."""
     session = Session()
-    city_obj = session.query(City).filter_by(name=city).first()
+    city_obj = session.query().filter_by(name=city).first()
     if city_obj:
-        hotels = session.query(Hotel).filter_by(city_id=city_obj.id).all()
+        hotels = session.query().filter_by(city_id=city_obj.id).all()
         session.close()
         if hotels:
             print(f"Hotels in {city}:")
