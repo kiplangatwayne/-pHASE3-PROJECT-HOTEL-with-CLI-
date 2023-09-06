@@ -128,6 +128,40 @@ def print_room_types(hotel_name):
         print(f"Hotel '{hotel_name}' not found.")
     session.close()
 
+
+def add_hotel():
+    session = Session()
+    
+    # Create a City object (if not already created)
+    city_name = "New York"  # Replace with the desired city name
+    city = session.query(City).filter_by(name=city_name).first()
+    if not city:
+        city = City(name=city_name)
+        session.add(city)
+    
+    # Create a Hotel object
+    city_name = "Nairobi"
+    hotel = Hotel(
+        name="sunshine",
+        description="A beautiful hotel with a view.",
+        rating=4.5,
+        city=city  # Assign the city object to the hotel
+    )
+
+    hotel = Hotel(
+        name="midland",
+        description="A beautiful hotel with swimmingpool.",
+        rating=6,
+        city=city  
+    )
+    # Add the hotel to the session and commit to the database
+    session.add(hotel)
+    session.commit()
+    session.close()
+    
+if __name__ == "__main__":
+    add_hotel()
+
 if __name__ == "__main__":
     choice = input("What do you want to do (add_user/add_city/print_user/print_city/print_room)? ").strip().lower()
     if choice == "add_user":
