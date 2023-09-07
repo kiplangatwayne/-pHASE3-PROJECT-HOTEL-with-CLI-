@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Float, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
@@ -20,15 +20,6 @@ class User(Base):
     password = Column(String(100), nullable=False)
     role = Column(String(20), nullable=False)
 
-# Define Reservation Model
-class Reservation(Base):
-    __tablename__ = "reservations"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    date = Column(DateTime, default=datetime.now)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    hotel_id = Column(Integer, ForeignKey("hotels.id"))
-    room_id = Column(Integer, ForeignKey("rooms.id"))
-
 # Define Hotel Model
 class Hotel(Base):
     __tablename__ = "hotels"
@@ -37,27 +28,45 @@ class Hotel(Base):
     description = Column(String(255))
     rating = Column(Float)
     city_id = Column(Integer, ForeignKey("cities.id"))
-    rooms = relationship("Room", backref="hotel_rooms", overlaps="room_hotel")  # Updated with 'overlaps'
-
-# Define Room Model
-class Room(Base):
-    __tablename__ = "rooms"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(100), nullable=False)
-    description = Column(String(255))
-    price = Column(Float)
-    hotel_id = Column(Integer, ForeignKey("hotels.id"))
-    hotel = relationship("Hotel", backref="room_hotel", overlaps="hotel_rooms")  # Updated with 'overlaps'
+    city = relationship("City", backref="hotels")  # Relationship with City
+    users = relationship("User", secondary="reservations")  # Relationship with User
 
 # Define City Model
 class City(Base):
     __tablename__ = "cities"
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), nullable=False)
-    hotels = relationship("Hotel", backref="city")
+
+# Define Reservation Model
+class Reservation(Base):
+    __tablename__ = "reservations"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    date = Column(DateTime, default=datetime.now)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    hotel_id = Column(Integer, ForeignKey("hotels.id"))
 
 # Create tables
 Base.metadata.create_all(engine)
+
+def add_user_with_hotel_and_city(name: str, username: str, email: str, password: str, role: str, hotel_name: str, city_name: str) -> None:
+    """Add a new user to the database, book a hotel, and add a city."""
+    with Session() as session:
+        user = User(name=name, username=username, email=email, password=password, role=role)
+        session.add(user)
+
+        # Book a hotel
+        hotel = session.query(Hotel).filter_by(name=hotel_name).first()
+        if hotel:
+            user.hotels.append(hotel)
+        
+        # Add a city
+        city = session.query(City).filter_by(name=city_name).first()
+        if not city:
+            city = City(name=city_name)
+            session.add(city)
+
+        session.commit()
+    print("User added, hotel booked, and city added successfully!")
 
 @click.command()
 @click.option("--name", prompt="User's Full Name", help="User's Full Name")
@@ -65,117 +74,52 @@ Base.metadata.create_all(engine)
 @click.option("--email", prompt="Email", help="Email")
 @click.option("--password", prompt="Password", hide_input=True, help="Password")
 @click.option("--role", type=click.Choice(["user", "admin"]), default="user", help="User Role (user/admin)")
-def add_user(name, username, email, password, role):
-    """Add a new user to the database."""
-    session = Session()
-    user = User(name=name, username=username, email=email, password=password, role=role)
-    session.add(user)
-    session.commit()
-    session.close()
-    print("User added successfully!")
+@click.option("--hotel_name", prompt="Hotel Name", help="Hotel Name")
+@click.option("--city_name", prompt="City Name", help="City Name")
+def add_user_book_hotel_add_city(name: str, username: str, email: str, password: str, role: str, hotel_name: str, city_name: str) -> None:
+    """Add a new user, book a hotel, and add a city."""
+    add_user_with_hotel_and_city(name, username, email, password, role, hotel_name, city_name)
 
 @click.command()
 @click.option("--name", prompt="City Name", help="City's Name")
-def add_city(name):
+def add_city(name: str) -> None:
     """Add a new city."""
-    session = Session()
-    city = City(name=name)
-    session.add(city)
-    session.commit()
-    session.close()
+    with Session() as session:
+        city = City(name=name)
+        session.add(city)
+        session.commit()
     print("City added successfully!")
 
-def print_user_details(username):
-    session = Session()
-    user = session.query(User).filter_by(username=username).first()
-    if user:
-        print(f"User ID: {user.id}")
-        print(f"Name: {user.name}")
-        print(f"Email: {user.email}")
-        print(f"Role: {user.role}")
-    else:
-        print(f"User with username '{username}' not found.")
-    session.close()
-
-def print_city_reservations(city_name):
-    session = Session()
-    city = session.query(City).filter_by(name=city_name).first()
-    if city:
-        print(f"City: {city.name}")
-        hotels = city.hotels
-        for hotel in hotels:
-            print(f"Hotel: {hotel.name}")
-            reservations = hotel.reservations
-            for reservation in reservations:
-                print(f"Reservation Date: {reservation.date}")
-                
-    else:
-        print(f"City '{city_name}' not found.")
-    session.close()
-
-def print_room_types(hotel_name):
-    session = Session()
-    hotel = session.query(Hotel).filter_by(name=hotel_name).first()
-    if hotel:
-        print(f"Hotel: {hotel.name}")
-        rooms = hotel.rooms
-        for room in rooms:
-            print(f"Room Type: {room.name}")
-            print(f"Description: {room.description}")
-            print(f"Price: {room.price}")
-        
-    else:
-        print(f"Hotel '{hotel_name}' not found.")
-    session.close()
-
-
-def add_hotel():
-    session = Session()
-    
-    # Create a City object
-    city_name = "New York"  
-    city = session.query(City).filter_by(name=city_name).first()
-    if not city:
-        city = City(name=city_name)
-        session.add(city)
-    
-    # Create a Hotel object
-    city_name = "Nairobi"
-    hotel = Hotel(
-        name="sunshine",
-        description="A beautiful hotel with a view.",
-        rating=4.5,
-        city=city  # Assign the city object to the hotel
-    )
-
-    hotel = Hotel(
-        name="midland",
-        description="A beautiful hotel with swimmingpool.",
-        rating=6,
-        city=city  
-    )
-    # Add the hotel to the session and commit to the database
-    session.add(hotel)
-    session.commit()
-    session.close()
-    
-if __name__ == "__main__":
-    add_hotel()
+@click.command()
+@click.option("--name", prompt="Hotel Name", help="Hotel Name")
+@click.option("--description", prompt="Hotel Description", help="Hotel Description")
+@click.option("--rating", type=click.FloatRange(0, 5), prompt="Hotel Rating (0-5)", help="Hotel Rating")
+@click.option("--city_name", prompt="City Name", help="City Name")
+def add_hotel(name: str, description: str, rating: float, city_name: str) -> None:
+    """Add a new hotel."""
+    with Session() as session:
+        city = session.query(City).filter_by(name=city_name).first()
+        if city:
+            hotel = Hotel(name=name, description=description, rating=rating, city=city)
+            session.add(hotel)
+            session.commit()
+            print("Hotel added successfully!")
+        else:
+            print(f"City '{city_name}' not found. Please add the city first.")
 
 if __name__ == "__main__":
-    choice = input("What do you want to do (add_user/add_city/print_user/print_city/print_room)? ").strip().lower()
+    choice = input("What do you want to do (add_user/add_city/add_hotel/print_user/print_city)? ").strip().lower()
     if choice == "add_user":
-        add_user()
+        add_user_book_hotel_add_city()
     elif choice == "add_city":
         add_city()
+    elif choice == "add_hotel":
+        add_hotel()
     elif choice == "print_user":
         username = input("Enter the username: ").strip()
-        print_user_details(username)
+        # print_user_details(username)
     elif choice == "print_city":
         city_name = input("Enter the city name: ").strip()
-        print_city_reservations(city_name)
-    elif choice == "print_room":
-        hotel_name = input("Enter the hotel name: ").strip()
-        print_room_types(hotel_name)
+        # print_city_reservations(city_name)
     else:
-        print("Invalid choice. Please choose 'add_user', 'add_city', 'print_user', 'print_city', or 'print_room'.")
+        print("Invalid choice. Please choose 'add_user', 'add_city', 'add_hotel', 'print_user', or ")
