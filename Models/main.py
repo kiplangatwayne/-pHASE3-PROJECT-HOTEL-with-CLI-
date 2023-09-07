@@ -132,8 +132,8 @@ def print_room_types(hotel_name):
 def add_hotel():
     session = Session()
     
-    # Create a City object (if not already created)
-    city_name = "New York"  # Replace with the desired city name
+    # Create a City object
+    city_name = "New York"  
     city = session.query(City).filter_by(name=city_name).first()
     if not city:
         city = City(name=city_name)
