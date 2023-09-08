@@ -144,18 +144,16 @@ def add_hotel() -> None:
     print("Hotel added successfully!")
 
 if __name__ == "__main__":
-    choice = input("What do you want to do (add_user/add_city/print_user/print_city/add_hotel)? ").strip().lower()
-    if choice == "add_user":
-        add_user_book_hotel_add_city()
-    elif choice == "add_city":
-        add_city()
-    elif choice == "print_user":
-        username = input("Enter the username: ").strip()
-        print_user_details(username)
-    elif choice == "print_city":
-        city_name = input("Enter the city name: ").strip()
-        print_city_reservations(city_name)
-    elif choice == "add_hotel":
-        add_hotel()
-    else:
-        print("Invalid choice. Please choose 'add_user', 'add_city', 'print_user', 'print_city', or 'add_hotel'.")
+    commands = {
+        "1": add_user_book_hotel_add_city,
+        "2": add_city,
+        "3": print_user_details,
+        "4": print_city_reservations,
+        "5": add_hotel
+    }
+    while True:
+        choice = input("What do you want to do (1. Add User/Hotel/City, 2. Add City, 3. Print User Details, 4. Print City Reservations, 5. Add Hotel)? ").strip().lower()
+        if choice in commands:
+            commands[choice]()
+        else:
+            print("Invalid choice. Please choose 1, 2, 3, 4, or 5.")

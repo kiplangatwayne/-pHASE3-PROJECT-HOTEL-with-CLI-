@@ -1,6 +1,5 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from main.py import Hotel, Reservation  # Import the Hotel and Reservation classes from your main.py
 
 # Create an SQLAlchemy session
 DATABASE_URL = "sqlite:///hotel_booking.db"  # Replace with your actual database URL
@@ -10,7 +9,7 @@ session = Session()
 
 def find_most_visited_hotel():
     # Query the database to find the most visited hotel
-    hotels = session.query(Hotel).all()
+    hotels = session.query(hotels).all()
     most_visited_hotel = None
     max_reservation_count = 0
 
