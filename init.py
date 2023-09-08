@@ -15,7 +15,7 @@ def find_most_visited_hotel():
 
     for hotel in hotels:
         # Count the number of reservations for each hotel
-        reservation_count = session.query(Reservation).filter_by(hotel_id=hotel.id).count()
+        reservation_count = session.query(reservations).filter_by(hotel_id=hotel.id).count()
 
         # Check if this hotel has more reservations than the current most visited hotel
         if reservation_count > max_reservation_count:

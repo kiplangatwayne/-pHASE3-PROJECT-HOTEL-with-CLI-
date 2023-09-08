@@ -2,7 +2,7 @@ import argparse
 import click
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from main import User, City, Hotel, Reservation, Room
+from main import User, City, Hotel, Reservation
 # Database Configuration
 DATABASE_URL = "sqlite:///hotel_booking.db"  # SQLite database
 engine = create_engine(DATABASE_URL)

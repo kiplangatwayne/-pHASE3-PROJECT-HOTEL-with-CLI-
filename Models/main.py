@@ -58,7 +58,9 @@ def add_user_with_hotel_and_city(name: str, username: str, email: str, password:
         hotel = session.query(Hotel).filter_by(name=hotel_name).first()
         if hotel:
             user.hotels.append(hotel)
-        
+        else:
+            print(f"Hotel '{hotel_name}' not found.")
+
         # Add a city
         city = session.query(City).filter_by(name=city_name).first()
         if not city:
@@ -90,7 +92,10 @@ def add_city(name: str) -> None:
         session.commit()
     print("City added successfully!")
 
+@click.command()
+@click.option("--username", prompt="Username", help="Username")
 def print_user_details(username: str) -> None:
+    """Print user details."""
     with Session() as session:
         user = session.query(User).filter_by(username=username).first()
         if user:
@@ -101,7 +106,10 @@ def print_user_details(username: str) -> None:
         else:
             print(f"User with username '{username}' not found.")
 
+@click.command()
+@click.option("--city_name", prompt="City Name", help="City Name")
 def print_city_reservations(city_name: str) -> None:
+    """Print city reservations."""
     with Session() as session:
         city = session.query(City).filter_by(name=city_name).first()
         if city:
@@ -115,30 +123,28 @@ def print_city_reservations(city_name: str) -> None:
         else:
             print(f"City '{city_name}' not found.")
 
+@click.command()
 def add_hotel() -> None:
-    # Prompt the user for hotel details
+    """Add a new hotel."""
     hotel_name = input("Enter the Hotel Name: ").strip()
     description = input("Enter the Hotel Description: ").strip()
     rating = float(input("Enter the Hotel Rating (0-5): ").strip())
     city_name = input("Enter the City Name: ").strip()
 
     with Session() as session:
-        # Check if the city exists
         city = session.query(City).filter_by(name=city_name).first()
         if not city:
             city = City(name=city_name)
             session.add(city)
             session.commit()
 
-        # Create a Hotel object
         hotel = Hotel(
             name=hotel_name,
             description=description,
             rating=rating,
-            city=city  # Assign the city object to the hotel
+            city=city
         )
 
-        # Add the hotel to the session and commit to the database
         session.add(hotel)
         session.commit()
     print("Hotel added successfully!")
